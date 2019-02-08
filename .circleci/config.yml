@@ -1,35 +1,60 @@
-version: 2
+version: 2.1
 
 defaults: &defaults
+  working_directory: /tmp/build/7.1
   docker:
   - image: circleci/php:7.1-browsers
-  working_directory: /tmp/build/7.1
+  environment:
+    PHP_VERSION: 7.1
+
+commands:
+  build:
+    parameters:
+      php_version:
+        type: string
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "composer.json" }}
+      - run:
+          name: Install composer dependencies
+          command: composer install -n --prefer-dist
+      - run:
+          command: ls /tmp/build/7.1
+      - persist_to_workspace:
+          root: /tmp/build
+          paths:
+          - ./<< parameters.php_version >>
+      - save_cache:
+          paths:
+          - ~/.composer/cache/
+          key: v1-dependencies-{{ checksum "composer.json" }}
 
 jobs:
   build:
     <<: *defaults
     steps:
-    - checkout
-    - restore_cache:
-        keys:
-        - v1-dependencies-{{ checksum "composer.json" }}
-    - run:
-        name: Install composer dependencies
-        command: composer install -n --prefer-dist
-    - persist_to_workspace:
-        root: .
-        paths:
-        - .
-    - save_cache:
-        paths:
-        - ~/.composer/cache/
-        key: v1-dependencies-{{ checksum "composer.json" }}
+    - build:
+        php_version: $PHP_VERSION
+
+  build_5_6:
+    docker:
+    - image: circleci/php:5.6-browsers
+    environment:
+      PHP_VERSION: 5.6
+    working_directory: /tmp/build/5.6
+    steps:
+    - build:
+        php_version: $PHP_VERSION
 
   test_unit:
     <<: *defaults
     steps:
     - attach_workspace:
-        at: .
+        at: /tmp/build
+    - run:
+        command: ls /tmp/build
     - run:
         name: Unit testing
         command: vendor/bin/phpunit -c phpunit.xml.dist --testsuite unit
@@ -38,7 +63,7 @@ jobs:
     <<: *defaults
     steps:
     - attach_workspace:
-        at: .
+        at: /tmp/build
     - run:
         name: PHPCS
         command: vendor/bin/phpcs --ignore=vendor,resources --standard=PSR12 .
@@ -48,9 +73,11 @@ workflows:
   build_and_test:
     jobs:
     - build
+    - build_5_6
     - test_unit:
         requires:
         - build
+        - build_5_6
     - test_phpcs:
         requires:
         - build
