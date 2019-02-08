@@ -1,0 +1,56 @@
+version: 2
+
+defaults: &defaults
+  docker:
+  - image: circleci/php:7.1-browsers
+  working_directory: /tmp/build/7.1
+
+jobs:
+  build:
+    <<: *defaults
+    steps:
+    - checkout
+    - restore_cache:
+        keys:
+        - v1-dependencies-{{ checksum "composer.json" }}
+    - run:
+        name: Install composer dependencies
+        command: composer install -n --prefer-dist
+    - persist_to_workspace:
+        root: .
+        paths:
+        - .
+    - save_cache:
+        paths:
+        - ~/.composer/cache/
+        key: v1-dependencies-{{ checksum "composer.json" }}
+
+  test_unit:
+    <<: *defaults
+    steps:
+    - attach_workspace:
+        at: .
+    - run:
+        name: Unit testing
+        command: vendor/bin/phpunit -c phpunit.xml.dist --testsuite unit
+
+  test_phpcs:
+    <<: *defaults
+    steps:
+    - attach_workspace:
+        at: .
+    - run:
+        name: PHPCS
+        command: vendor/bin/phpcs --ignore=vendor,resources --standard=PSR12 .
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+    - build
+    - test_unit:
+        requires:
+        - build
+    - test_phpcs:
+        requires:
+        - build
