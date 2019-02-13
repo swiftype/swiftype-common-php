@@ -117,6 +117,12 @@ workflows:
     jobs:
     - build_php_71
     - build_php_56
+    - test_php_71
+        requires:
+        - build_php_71
+    - test_php_56
+        requires:
+        - build_php_56
 #     - build_5_6
 #     - test_unit:
 #         requires:
