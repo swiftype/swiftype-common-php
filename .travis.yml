@@ -11,6 +11,10 @@ env:
   matrix:
     - TEST_SUITE=unit
 
+cache:
+  directories:
+    - $HOME/.composer/cache
+
 before_script:
   - composer install
 
