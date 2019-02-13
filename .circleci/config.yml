@@ -41,6 +41,8 @@ commands:
       test_suite:
         type: string
     steps:
+      - attach_workspace:
+          at: /tmp/build
       - run:
           command: vendor/bin/phpunit -c phpunit.xml.dist --testsuite << parameters.test_suite >>
 
@@ -58,76 +60,36 @@ jobs:
   test_php_71:
     <<: *php_71
     steps:
-    - attach_workspace:
-        at: /tmp/build
-    - run:
-        command: ls /tmp/build/5.6
-    - run:
-        command: pwd
-    - run:
-        command: ls
+    - phpunit:
+        test_suite: unit
 
   test_php_56:
     <<: *php_56
     steps:
+    - phpunit:
+        test_suite: unit
+
+  qa_phpcs:
+    <<: *php_71
+    steps:
     - attach_workspace:
         at: /tmp/build
     - run:
-        command: ls /tmp/build/5.6
-    - run:
-        command: pwd
-    - run:
-        command: ls
-
-
-
-#   build_5_6:
-#     docker:
-#     - image: circleci/php:5.6-browsers
-#     environment:
-#       PHP_VERSION: 5.6
-#     working_directory: /tmp/build/5.6
-#     steps:
-#     - build:
-#         php_version: $PHP_VERSION
-#
-#   test_unit:
-#     <<: *defaults
-#     steps:
-#     - attach_workspace:
-#         at: /tmp/build
-#     - run:
-#         command: ls /tmp/build
-#     - run:
-#         name: Unit testing
-#         command: vendor/bin/phpunit -c phpunit.xml.dist --testsuite unit
-#
-#   test_phpcs:
-#     <<: *defaults
-#     steps:
-#     - attach_workspace:
-#         at: /tmp/build
-#     - run:
-#         name: PHPCS
-#         command: vendor/bin/phpcs --ignore=vendor,resources --standard=PSR12 .
+        name: PHPCS
+        command: vendor/bin/phpcs --ignore=vendor,resources --standard=PSR12 .
 #
 workflows:
   version: 2
   build_and_test:
     jobs:
     - build_php_71
-    - build_php_56
-    - test_php_71
+    - test_php_71:
         requires:
         - build_php_71
-    - test_php_56
+    - qa_phpcs:
+        requires:
+        - build_php_71
+    - build_php_56
+    - test_php_56:
         requires:
         - build_php_56
-#     - build_5_6
-#     - test_unit:
-#         requires:
-#         - build
-#         - build_5_6
-#     - test_phpcs:
-#         requires:
-#         - build
