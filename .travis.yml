@@ -20,14 +20,12 @@ install:
 
 jobs:
   include:
-  - stage: qa
-    name: QA
+  - stage: QA
     script: vendor/bin/phpcs --ignore=vendor,resources --standard=PSR12 .
     php: 7.2
   - stage: test
-    name: Tests
     script: phpunit -c phpunit.xml.dist --testsuite $TEST_SUITE
 
 stages:
-  - qa
+  - QA
   - test
