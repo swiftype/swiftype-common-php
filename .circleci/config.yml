@@ -1,0 +1,127 @@
+version: 2.1
+
+php_71: &php_71
+  working_directory: /tmp/build/7.1
+  docker:
+  - image: circleci/php:7.1-browsers
+  environment:
+    PHP_VERSION: "7.1"
+
+php_56: &php_56
+  working_directory: /tmp/build/5.6
+  docker:
+  - image: circleci/php:5.6-browsers
+  environment:
+    PHP_VERSION: "5.6"
+
+commands:
+  install_deps:
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "composer.json" }}
+      - attach_workspace:
+          at: /tmp/build
+      - run:
+          name: Install composer dependencies
+          command: composer install -n --prefer-dist
+      - persist_to_workspace:
+          root: /tmp/build
+          paths:
+          - .
+      - save_cache:
+          paths:
+          - ~/.composer/cache/
+          key: v1-dependencies-{{ checksum "composer.json" }}
+      - run:
+          command: ls /tmp/build
+  phpunit:
+    parameters:
+      test_suite:
+        type: string
+    steps:
+      - run:
+          command: vendor/bin/phpunit -c phpunit.xml.dist --testsuite << parameters.test_suite >>
+
+jobs:
+  build_php_71:
+    <<: *php_71
+    steps:
+    - install_deps
+
+  build_php_56:
+    <<: *php_56
+    steps:
+    - install_deps
+
+  test_php_71:
+    <<: *php_71
+    steps:
+    - attach_workspace:
+        at: /tmp/build
+    - run:
+        command: ls /tmp/build/5.6
+    - run:
+        command: pwd
+    - run:
+        command: ls
+
+  test_php_56:
+    <<: *php_56
+    steps:
+    - attach_workspace:
+        at: /tmp/build
+    - run:
+        command: ls /tmp/build/5.6
+    - run:
+        command: pwd
+    - run:
+        command: ls
+
+
+
+#   build_5_6:
+#     docker:
+#     - image: circleci/php:5.6-browsers
+#     environment:
+#       PHP_VERSION: 5.6
+#     working_directory: /tmp/build/5.6
+#     steps:
+#     - build:
+#         php_version: $PHP_VERSION
+#
+#   test_unit:
+#     <<: *defaults
+#     steps:
+#     - attach_workspace:
+#         at: /tmp/build
+#     - run:
+#         command: ls /tmp/build
+#     - run:
+#         name: Unit testing
+#         command: vendor/bin/phpunit -c phpunit.xml.dist --testsuite unit
+#
+#   test_phpcs:
+#     <<: *defaults
+#     steps:
+#     - attach_workspace:
+#         at: /tmp/build
+#     - run:
+#         name: PHPCS
+#         command: vendor/bin/phpcs --ignore=vendor,resources --standard=PSR12 .
+#
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+    - build_php_71
+    - build_php_56
+#     - build_5_6
+#     - test_unit:
+#         requires:
+#         - build
+#         - build_5_6
+#     - test_phpcs:
+#         requires:
+#         - build
