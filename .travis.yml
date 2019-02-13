@@ -1,5 +1,16 @@
 language: php
 
+php:
+  - '5.6'
+  - '7.0'
+  - '7.1'
+  - '7.2'
+  - '7.3'
+
+env:
+  matrix:
+    - TEST_SUITE=unit
+
 cache:
   directories:
     - $HOME/.composer/cache
@@ -9,21 +20,14 @@ install:
 
 jobs:
   include:
-  - stage: "Code quality"
+  - stage: qa
+    name: QA
     script: vendor/bin/phpcs --ignore=vendor,resources --standard=PSR12 .
     php: 7.2
-  - stage: "Unit Testing"
-    php:
-      - '5.6'
-      - '7.0'
-      - '7.1'
-      - '7.2'
-      - '7.3'
-    env:
-      matrix:
-        - TEST_SUITE=unit
+  - stage: test
+    name: Tests
     script: phpunit -c phpunit.xml.dist --testsuite $TEST_SUITE
 
 stages:
-  - "Code quality"
-  - "Unit Testing"
+  - qa
+  - test
