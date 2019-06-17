@@ -2,7 +2,7 @@
 
 > Make easier clients creation by generating most of the code from an Open API specification.
 >
-> **⚠️ This repository is deprecated ⚠️ **
+> **⚠️ This repository is deprecated ⚠️**
 >
 > **Please visit [https://github.com/elastic/openapi-codegen-php](https://github.com/elastic/openapi-codegen-php) for the up to date version. Thank you! - Elastic**
 
@@ -17,7 +17,7 @@
 
 Documentation of this repository have been archived [here](docs/Usage.md).
 
-If you want to find the documentation for up top date version, please visit [https://github.com/elastic/openapi-codegen-php](https://github.com/elastic/openapi-codegen-php)
+If you want to find the documentation for up to date version, please visit [https://github.com/elastic/openapi-codegen-php](https://github.com/elastic/openapi-codegen-php)
 
 ## License 📗
 
